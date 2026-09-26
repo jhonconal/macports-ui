@@ -89,11 +89,13 @@
 ├── Scripts/
 │   ├── build.sh               # 一键管线：测试 → 调试构建 → 发布打包
 │   ├── make-app.sh            # 分架构构建 + lipo → universal .app（ad-hoc 签名）→ .zip/.dmg
-│   └── release.sh             # 发版脚本：打包 + 归档到 release/ + git tag +（可选）GitHub Release
+│   └── release.sh             # 发版脚本：打包 + 归档到 release/（统一命名 MacPorts-latest.*）+ git tag +（可选）GitHub Release
 ├── Resources/icon-master.png  # 应用图标源文件（建议 1024×1024）
-└── release/                   # 各版本发布产物（随 git 提交，便于直接克隆获取）
-    ├── MacPorts-v0.1.0.dmg
-    └── MacPorts-v0.1.0.zip
+└── release/                   # 恒为最新版的发布产物（统一命名，随 git 提交）
+    ├── MacPorts-latest.zip
+    ├── MacPorts-latest.dmg
+    ├── MacPorts-latest.sha256
+    └── MacPorts-latest.meta.json  # 记录当前 latest 对应的版本/日期
 ```
 
 ### 数据流（以"升级端口"为例）
@@ -145,7 +147,7 @@ MPUI_DEMO=nomacports ./run    # 模拟未安装 MacPorts 的告警
 
 ## 安装与使用（最终用户）
 
-1. 从 [Releases 页面](https://github.com/jhonconal/macports-ui/releases)（或本仓库 `release/` 目录）下载对应版本的 `.dmg` 或 `.zip`（一个 universal 包同时适用于 Apple Silicon 与 Intel Mac）。
+1. 从 [Releases 页面](https://github.com/jhonconal/macports-ui/releases) 下载对应版本的 `.dmg` 或 `.zip`；或克隆本仓库直接使用 `release/` 目录下的 `MacPorts-latest.dmg` / `MacPorts-latest.zip`（始终为最新版，一个 universal 包同时适用于 Apple Silicon 与 Intel Mac）。
 2. DMG 内含 `.app` 与 `Applications` 快捷方式，**拖拽安装**；ZIP 直接解压得到 `MacPorts.app`。
 3. 首次打开如被 Gatekeeper 拦截（本发布包为 ad-hoc 签名，未公证），任选其一：
    - 在 **系统设置 → 隐私与安全性** 中点击"仍要打开"；或
@@ -160,14 +162,14 @@ MPUI_DEMO=nomacports ./run    # 模拟未安装 MacPorts 的告警
 本仓库保证用户"永远能下载到软件"，采用 **git 标签 + GitHub Releases** 双通道：
 
 - **最新正式版**：GitHub 仓库的 **Releases** 页自动置顶 "Latest release"；仓库 Releases 列表按时间保留全部历史版本，可随时回看与下载旧版本。
-- **仓库内备份通道**：每个版本的产物同步提交在 `release/` 目录，`git clone` 即可离线获取（不依赖 GitHub 网络）。
+- **仓库内备份通道**：`release/` 目录**只保留最新版**，统一命名为 `MacPorts-latest.{zip,dmg,sha256,meta.json}`（`meta.json` 标注对应的版本号与日期），每次发版由 `Scripts/release.sh` 覆盖更新；`git clone` 即可离线获取最新软件，旧版本仍可回看 GitHub Releases 与 git 历史。
 - **更新方式**：本应用**没有内置自动更新**（未接入 Sparkle 等）。升级方式 = 下载新版 Release 包覆盖安装旧版；旧版包不会自动消失，用户可随时在 Releases 列表下载旧版本。
 
 ### 发布一个新版本（维护者）
 
 ```sh
-# 一键发版：universal 打包 → 归档到 release/ → 打 git tag v<版本>
-# 如安装了 gh CLI 并已登录，还会自动创建 GitHub Release 并上传产物
+# 一键发版：universal 打包 → 归档到 release/（统一命名 MacPorts-latest.*）→ 打 git tag v<版本>
+# 如安装了 gh CLI 并已登录，还会自动创建 GitHub Release 并上传版本化产物
 sh Scripts/release.sh 0.2.0
 
 # 仅构建 + 打 tag（手动创建 GitHub Release）
@@ -177,8 +179,8 @@ sh Scripts/release.sh 0.2.0 --no-gh
 发版约定：
 
 1. 版本号采用 `X.Y.Z` 三段式；脚本会校验格式。
-2. 产物命名固定为 `MacPorts-v<VERSION>.zip` / `.dmg`，提交进 `release/` 并随 tag 一起推送。
-3. 推送 tag 后在 GitHub 创建 Release（`gh release create vX.Y.Z release/MacPorts-vX.Y.Z.dmg release/MacPorts-vX.Y.Z.zip --generate-notes`），Releases 页即可"最新 + 全部历史"浏览下载。
+2. 产物命名分两处：`dist/` 中为版本化名 `MacPorts-v<VERSION>.zip/.dmg`（供 GitHub Release 上传，保留每个版本）；`release/` 中统一归档为 `MacPorts-latest.*`（每次发版覆盖，随 tag 一起推送进 git）。
+3. 推送 tag 后在 GitHub 创建 Release（`gh release create vX.Y.Z dist/MacPorts-vX.Y.Z.dmg dist/MacPorts-vX.Y.Z.zip --generate-notes`），Releases 页即可"最新 + 全部历史"浏览下载。
 4. 每个 Release 建议附简短的变更说明（changelog）。
 
 ---
@@ -192,7 +194,7 @@ sh Scripts/release.sh 0.2.0 --no-gh
 5. **SQLite shim 是预留项**：`Sources/SQLite3` 与 `linkedLibrary("sqlite3")` 当前没有实际功能，直读 `registry.db` 是后续计划；不要假设它存在可用接口。
 6. **多架构构建原理**：发布脚本按架构分别 `swift build` 后再 `lipo` 合并为 universal 二进制（Command Line Tools 无法一次多架构编译）；CI 上可用 `ARCHS=x86_64` 等环境变量限制架构做测试。
 7. **macOS 版本下限**：最低支持 macOS 13，使用 SwiftUI 相关 API 时请以 `Package.swift` 中的 `.macOS(.v13)` 为准。
-8. **产物不入 dist/**：`dist/` 已被 `.gitignore` 忽略，只有 `release/` 目录的版本化产物进 git。
+8. **产物不入 dist/**：`dist/` 已被 `.gitignore` 忽略；进 git 的是 `release/` 目录，其中**恒为最新版**（统一命名 `MacPorts-latest.*`，每次发版覆盖；`meta.json` 记录对应版本号，git 历史保留所有旧版文件）。
 
 ---
 

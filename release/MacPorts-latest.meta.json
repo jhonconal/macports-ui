@@ -1,0 +1,9 @@
+{
+  "name": "MacPorts",
+  "channel": "latest",
+  "version": "0.1.0",
+  "tag": "v0.1.0",
+  "architectures": ["arm64", "x86_64"],
+  "platform": "macOS 13+",
+  "date": "2026-09-27"
+}

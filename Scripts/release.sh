@@ -4,8 +4,10 @@
 # Pipeline:
 #   1. Build universal (arm64 + x86_64) release artifacts via make-app.sh
 #      (universal .app + versioned .zip/.dmg into dist/)
-#   2. Archive the versioned artifacts into release/ (committed to git,
-#      so `git clone` alone is enough to obtain any published version)
+#   2. Archive the build into release/ under the UNIFORM name
+#      MacPorts-latest.{zip,dmg,sha256,meta.json} — every release simply
+#      overwrites that one set, so release/ always holds ONLY the latest
+#      build (git history keeps every previous version).
 #   3. Create/update git tag v<VERSION>
 #   4. If gh CLI is available and --no-gh is not set: create a GitHub
 #      Release (v<VERSION>) and upload the artifacts. GitHub's Releases
@@ -53,13 +55,27 @@ TAG="v${VERSION}"
 echo "== [1/4] building universal release artifacts (arm64 + x86_64) =="
 sh Scripts/make-app.sh "$VERSION"
 
-echo "== [2/4] archiving into release/ =="
+echo "== [2/4] archiving into release/ as MacPorts-latest.* =="
 mkdir -p release
-cp -f "dist/MacPorts-v${VERSION}.zip" "release/MacPorts-v${VERSION}.zip"
-cp -f "dist/MacPorts-v${VERSION}.dmg" "release/MacPorts-v${VERSION}.dmg"
-shasum -a 256 "release/MacPorts-v${VERSION}.zip" "release/MacPorts-v${VERSION}.dmg" \
-    > "release/MacPorts-v${VERSION}.sha256"
-echo "    $(ls -1 release/MacPorts-v${VERSION}.* | sed 's/^/    /')"
+# Uniform naming: release/ always carries exactly one rolling set.
+rm -f release/MacPorts-v* 2>/dev/null || true
+cp -f "dist/MacPorts-v${VERSION}.zip" "release/MacPorts-latest.zip"
+cp -f "dist/MacPorts-v${VERSION}.dmg" "release/MacPorts-latest.dmg"
+shasum -a 256 "release/MacPorts-latest.zip" "release/MacPorts-latest.dmg" \
+    > "release/MacPorts-latest.sha256"
+# Which version the rolling set currently is (so `git clone` users can tell)
+cat > "release/MacPorts-latest.meta.json" <<EOF
+{
+  "name": "MacPorts",
+  "channel": "latest",
+  "version": "${VERSION}",
+  "tag": "${TAG}",
+  "architectures": ["arm64", "x86_64"],
+  "platform": "macOS 13+",
+  "date": "$(date +%Y-%m-%d)"
+}
+EOF
+echo "    $(ls -1 release/MacPorts-latest.* | sed 's/^/    /')"
 
 echo "== [3/4] git tag ${TAG} =="
 if git rev-parse --git-dir >/dev/null 2>&1; then
@@ -85,8 +101,8 @@ if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
         gh release delete "$TAG" --cleanup-tag --yes
     fi
     gh release create "$TAG" \
-        "release/MacPorts-v${VERSION}.zip" \
-        "release/MacPorts-v${VERSION}.dmg" \
+        "dist/MacPorts-v${VERSION}.zip" \
+        "dist/MacPorts-v${VERSION}.dmg" \
         --title "MacPorts ${VERSION}" \
         --notes "Universal macOS build (arm64 + x86_64), ad-hoc signed.
 Requirements: macOS 13+, MacPorts installed. First launch may be blocked
@@ -96,7 +112,7 @@ by Gatekeeper (not notarized) — see the repository README."
 else
     echo "    gh CLI not available (or not authenticated); create the Release manually:"
     echo "      git tag -f ${TAG} && git push origin main ${TAG}"
-    echo "      then upload release/MacPorts-v${VERSION}.{zip,dmg} at <repo>/releases/new"
+    echo "      then upload dist/MacPorts-v${VERSION}.{zip,dmg} at <repo>/releases/new"
 fi
 
 echo "done."
