@@ -6,7 +6,18 @@
 - 构建方式：Swift Package Manager（SPM），**无需 Xcode，Command Line Tools 即可编译**
 - 运行环境：macOS 13 Ventura 及以上
 
-> 📥 下载软件与查看历史版本：请见 [Releases 页面](https://github.com/OWNER/macports-ui/releases)（将 `OWNER` 替换为实际仓库归属者）。GitHub 的 **Releases** 页面会自动在 "Latest release" 显示最新版本，同时在下方列出**所有历史版本**，每个版本均可单独下载。
+---
+
+## 界面快照
+
+| 发现与安装（Discover） | 已安装列表与详情（Installed） |
+|---|---|
+| <img src="snapshots/001.png" width="480" alt="Discover：搜索软件源并查看端口详情，右侧可复制安装命令或一键安装"> | <img src="snapshots/002.png" width="480" alt="Installed：浏览 206 个已安装端口，含依赖/被依赖详情与底部命令日志"> |
+
+- **001** — Discover 页：搜索 MacPorts 软件源（如 `claude`），右侧详情面板展示版本、主页、依赖关系，并提供终端命令复制与一键安装；
+- **002** — Installed 页：已安装端口列表（All / Outdated 过滤）与详情（依赖、被依赖、卸载命令），底部为每次 `port` 调用的命令日志。
+
+> 更多界面：Outdated（过时端口）、Dependencies（依赖图）、Doctor（健康诊断）、Settings / About 面板。
 
 ---
 
@@ -134,7 +145,7 @@ MPUI_DEMO=nomacports ./run    # 模拟未安装 MacPorts 的告警
 
 ## 安装与使用（最终用户）
 
-1. 从 [Releases 页面](https://github.com/OWNER/macports-ui/releases)（或本仓库 `release/` 目录）下载对应版本的 `.dmg` 或 `.zip`（一个 universal 包同时适用于 Apple Silicon 与 Intel Mac）。
+1. 从 [Releases 页面](https://github.com/jhonconal/macports-ui/releases)（或本仓库 `release/` 目录）下载对应版本的 `.dmg` 或 `.zip`（一个 universal 包同时适用于 Apple Silicon 与 Intel Mac）。
 2. DMG 内含 `.app` 与 `Applications` 快捷方式，**拖拽安装**；ZIP 直接解压得到 `MacPorts.app`。
 3. 首次打开如被 Gatekeeper 拦截（本发布包为 ad-hoc 签名，未公证），任选其一：
    - 在 **系统设置 → 隐私与安全性** 中点击"仍要打开"；或
@@ -187,4 +198,6 @@ sh Scripts/release.sh 0.2.0 --no-gh
 
 ## 许可证
 
-待定（如采用 GPL-2.0（与 MacPorts 一致）或 MIT，请补充 `LICENSE` 文件后在此注明）。
+本项目采用 **MIT** 许可证发布（见 [`LICENSE`](LICENSE) 文件）。
+
+> 注意：本工具与 MacPorts 本身（GPL-2.0）相互独立；MIT 只约束本仓库代码与产物。

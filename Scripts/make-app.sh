@@ -72,6 +72,12 @@ APP="$OUT/${APP_NAME}.app"
 ZIP="$OUT/${APP_NAME}-v${VERSION}.zip"
 DMG="$OUT/${APP_NAME}-v${VERSION}.dmg"
 
+# Ensure the output dir exists before anything writes into it (lipo's temp
+# file, the .app, the iconset). On a clean checkout dist/ is gitignored
+# and absent, so without this the first lipo call dies with
+# "can't create temporary output file: dist/... (No such file or directory)".
+mkdir -p "$OUT"
+
 [ -f "$MASTER" ] || { echo "error: icon master not found: $MASTER" >&2; exit 1; }
 
 # Warn (do not fail) if the master is smaller than 1024.

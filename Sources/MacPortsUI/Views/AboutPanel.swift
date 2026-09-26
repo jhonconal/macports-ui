@@ -100,7 +100,8 @@ struct AboutSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 link("MacPorts", "https://www.macports.org")
                 link("MacPorts Wiki", "https://trac.macports.org/wiki/WikiStart")
-                link("MacPorts (GitHub)", "https://github.com/macports/macports")
+                link("MacPorts (GitHub)", "https://github.com/jhonconal/macports-ui")
+                link("MacPorts (GitHub)", "https://github.com/macports-ui/macports-ui")
             }
         }
     }
