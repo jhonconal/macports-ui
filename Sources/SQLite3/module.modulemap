@@ -1,0 +1,4 @@
+module SQLite3 {
+    header "shim.h"
+    export *
+}

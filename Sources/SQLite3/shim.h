@@ -1,0 +1,6 @@
+#ifndef MACPORTSUI_SQLITE3_SHIM_H
+#define MACPORTSUI_SQLITE3_SHIM_H
+
+#include <sqlite3.h>
+
+#endif /* MACPORTSUI_SQLITE3_SHIM_H */

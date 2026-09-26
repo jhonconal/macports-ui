@@ -1,0 +1,19 @@
+# SPM
+.build/
+.swiftpm/
+*.xcodeproj
+DerivedData/
+
+# macOS
+.DS_Store
+
+# editor
+.idea/
+.vscode/
+
+# agent tooling state
+.pi/
+
+# packaging output
+# scripts and icons live in Scripts/ and Resources/; build products in dist/
+dist/
